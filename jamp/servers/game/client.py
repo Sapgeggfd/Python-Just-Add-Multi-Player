@@ -1,7 +1,6 @@
 import threading
 import time
 from logging import Logger
-from queue import PriorityQueue
 from socket import socket
 from typing import Protocol
 from uuid import uuid4
@@ -9,6 +8,7 @@ from uuid import uuid4
 import requests
 
 from ...enums.tcp_server_enums import PayloadType
+from ...events.tcp_events import *
 from ...packets.tcp_packet import TCPPacket
 from ...utils.custom_logger import ClientLogger
 from ...utils.static_settings import (
@@ -21,11 +21,6 @@ from ...utils.static_settings import (
 from .exception import *
 
 
-class TCPServer(Protocol):
-    def on_client_connect(self, client) -> None: ...
-    def on_client_disconnect(self, client): ...
-
-
 class Client:
     tcp_sock: socket
 
@@ -34,9 +29,7 @@ class Client:
     user_uuid: uuid4
     auth_token:str
     
-    tcp_server:TCPServer
-
-    def __init__(self, address, tcp_sock: socket,tcp_server:TCPServer) -> None:
+    def __init__(self, address, tcp_sock: socket,) -> None:
         self.logger: Logger = ClientLogger
         self.connected = False 
         self.disconnected = False
@@ -46,7 +39,7 @@ class Client:
 
         self._user_uuid = None
         
-        self.tcp_server = tcp_server
+        on_packet_received.register_handler(self.handle_disconcert_package,PayloadType.DISCONNECT)
 
     @property
     def user_uuid(self)->uuid4:
@@ -72,7 +65,7 @@ class Client:
                         self.user_uuid(packet.data.get("user_uuid"))
                         if packet.type == PayloadType.CONNECT and self._auth_player():
                             self.connected = True
-                            self.tcp_server.on_client_connect(self)
+                            on_client_connect.trigger(client=self)
                 except (EOFError, ConnectionResetError) as e:
                     self.error_disconnect(exception=e,connection_error=True)
             
@@ -100,8 +93,6 @@ class Client:
             raise AuthServerError(e)
         
     def _handle_connection(self):
-        self.recv_package_que = PriorityQueue()
-        threading.Thread(target=self.handle_package).start()
         with self.tcp_sock as client_sock:
             while self.connected:
                 try:
@@ -110,22 +101,13 @@ class Client:
                         payload = client_sock.recv(int(payload_size))
                         packet = TCPPacket.load(payload)
                         self.logger.debug(f"added package to queue: {packet}")
-                        self.recv_package_que.put((packet.type.value,packet))
+                        on_packet_received.trigger(packet=packet)
                 except (EOFError, ConnectionResetError):
                     break
     
-    def handle_package(self):
-        while self.connected:
-            for package in self.recv_package_que:
-                self.logger.debug(f"Matching Package-Type: {package.type}")
-                try:
-                    match package.type:
-                        case PayloadType.DISCONNECT:
-                            self.disconnect(reason="user-disconcert",msg="Thx for Playing :D")
-                        case _:
-                            raise InvalidPackageType(user_uuid=self.user_uuid,logger=self.logger,package=package)
-                except InvalidPackageType as e:
-                    self.error_disconnect(exception=e)
+    
+    def handle_disconcert_package(self,package:TCPPacket)->None:
+        self.disconnect(reason="user-disconcert",msg="Thx for Playing :D")
     
     def send(self,packet:TCPPacket)->None:
         try:
@@ -148,7 +130,7 @@ class Client:
         self.tcp_sock.close()
         self.connected = False
         self.disconnected = True
-        self.tcp_server.on_client_disconnect(self)
+        on_client_disconnect.trigger(client=self)
         self.logger.info(f"User [{self.user_uuid.hex}] disconnected {kwargs if kwargs else ""}")
 
     def error_disconnect(self,exception:Exception,connection_error:False):
@@ -158,5 +140,5 @@ class Client:
         self.tcp_sock.close()
         self.connected = False
         self.disconnected = True
-        self.tcp_server.on_client_disconnect(self)
+        on_client_disconnect.trigger(client=self)
         self.logger.warning(f"User Disconnect with {"Connection ERROR" if connection_error else "ERROR"}",exc_info=exception)

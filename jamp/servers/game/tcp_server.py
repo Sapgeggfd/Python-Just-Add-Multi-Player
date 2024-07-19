@@ -68,7 +68,3 @@ class TCPServer:
                     dc_clients.append(client)
             for client in dc_clients:
                 self.game_server.remove_client(client)
-
-    def on_client_connect(self, client) -> None: ...
-
-    def on_client_disconnect(self, client): ...
