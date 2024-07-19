@@ -53,8 +53,8 @@ class TCPServer:
                 threading.Thread(target=self._client_connect, args=(client_sock, addr)).start()
 
     def _client_connect(self, client_sock, addr):
-        new_client = self.custom_client(address=addr, tcp_sock=client_sock, tcp_server=self)
-        if new_client.wait_for_connect():
+        new_client: Client = self.custom_client(address=addr, tcp_sock=client_sock, tcp_server=self)
+        if new_client._wait_for_connect():
             if self.game_server.add_client(new_client):
                 threading.Thread(target=Client._handle_connection).start()
                 return

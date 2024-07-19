@@ -1,8 +1,6 @@
 import threading
-import time
 from logging import Logger
 from socket import socket
-from typing import Protocol
 from uuid import uuid4
 
 import requests
@@ -11,13 +9,7 @@ from ...enums.tcp_server_enums import PayloadType
 from ...events.tcp_events import *
 from ...packets.tcp_packet import TCPPacket
 from ...utils.custom_logger import ClientLogger
-from ...utils.static_settings import (
-    CERTIFICATE,
-    PLAYER_AUTH,
-    PLAYER_AUTH_SERVER_URL,
-    TCP_CONNECT_TIMEOUT,
-    TCP_HEADER_SIZE,
-)
+from ...utils.static_settings import *
 from .exception import *
 
 
@@ -39,6 +31,7 @@ class Client:
 
         self._user_uuid = None
         
+    def _register_handlers(self):
         on_packet_received.register_handler(self.handle_disconcert_package,PayloadType.DISCONNECT)
 
     @property
@@ -54,9 +47,8 @@ class Client:
         
         
     def _wait_for_connect(self) -> bool:
-        start_time = time.time()
         with self.tcp_sock as client_sock:
-            while not self.connected or (time.time()-start_time >= TCP_CONNECT_TIMEOUT):
+            while self.connected:
                 try:
                     payload_size: str = client_sock.recv(TCP_HEADER_SIZE)[:TCP_HEADER_SIZE].decode("utf-8")
                     if payload_size.isdecimal():
@@ -104,8 +96,7 @@ class Client:
                         on_packet_received.trigger(packet=packet)
                 except (EOFError, ConnectionResetError):
                     break
-    
-    
+       
     def handle_disconcert_package(self,package:TCPPacket)->None:
         self.disconnect(reason="user-disconcert",msg="Thx for Playing :D")
     
