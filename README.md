@@ -2,6 +2,10 @@
 
 Welcome to the Just Add Multi-Player repository (jamp)! This project aims to provide a robust, scalable, and easy-to-use architecture for developing multiplayer game servers in Python.
 
+# Disclaimer
+***This Project is still in early early development and may have some big bugs!***
+
+
 ## Features
 
 - **Scalable**: Designed to handle a large number of concurrent players.
