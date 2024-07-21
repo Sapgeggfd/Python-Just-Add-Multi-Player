@@ -1,4 +1,7 @@
+import socket
 from typing import Protocol
+
+from ...utils.static_settings import *
 
 
 class GameServer(Protocol): ...
@@ -13,3 +16,15 @@ class UDPServer:
         self.host = host
         self.port = port
         self.game_server = game_server
+
+        self.udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    def run(self):
+
+        with self.udp_sock as sock:
+            sock.bind((self.host, self.port))
+            try:
+                data, client_addr = sock.recvfrom(UDP_PACKET_SIZE)
+
+            except Exception as e:
+                print(e)
