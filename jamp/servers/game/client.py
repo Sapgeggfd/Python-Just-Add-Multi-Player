@@ -1,12 +1,13 @@
+import socket
 import threading
 from logging import Logger
-from socket import socket
+from queue import PriorityQueue
 from uuid import uuid4
 
 import requests
 
-from ...enums.tcp_server_enums import PayloadType
-from ...events.tcp_events import *
+from ...enums.tcp_enums import TCPPayloadType
+from ...events.udp_tcp_client_events import *
 from ...packets.tcp_packet import TCPPacket
 from ...utils.custom_logger import ClientLogger
 from ...utils.static_settings import *
@@ -14,25 +15,28 @@ from .exception import *
 
 
 class Client:
-    tcp_sock: socket
+    tcp_sock: socket.socket
 
     connected:bool
     disconnected:bool
     user_uuid: uuid4
     auth_token:str
     
-    def __init__(self, address, tcp_sock: socket,) -> None:
+    remote_ip:str
+    
+    def __init__(self, address, tcp_sock: socket.socket) -> None:
         self.logger: Logger = ClientLogger
         self.connected = False 
         self.disconnected = False
 
         self.address = address
-        self.tcp_sock = tcp_sock
-
+        self.tcp_sock = tcp_sock 
         self._user_uuid = None
         
-    def _register_handlers(self):
-        on_packet_received.register_handler(self.handle_disconcert_package,PayloadType.DISCONNECT)
+        self.udp_queue = PriorityQueue()
+        
+        self.remote_ip=self.tcp_sock.getpeername()
+        
 
     @property
     def user_uuid(self)->uuid4:
@@ -55,7 +59,7 @@ class Client:
                         payload = client_sock.recv(int(payload_size))
                         packet = TCPPacket.load(payload)
                         self.user_uuid(packet.data.get("user_uuid"))
-                        if packet.type == PayloadType.CONNECT and self._auth_player():
+                        if packet.type == TCPPayloadType.CONNECT and self._auth_player():
                             self.connected = True
                             on_client_connect.trigger(client=self)
                 except (EOFError, ConnectionResetError) as e:
@@ -84,7 +88,7 @@ class Client:
         except requests.RequestException as e:
             raise AuthServerError(e)
         
-    def _handle_connection(self):
+    def _handle_tcp_connection(self):
         with self.tcp_sock as client_sock:
             while self.connected:
                 try:
@@ -93,10 +97,16 @@ class Client:
                         payload = client_sock.recv(int(payload_size))
                         packet = TCPPacket.load(payload)
                         self.logger.debug(f"added package to queue: {packet}")
-                        on_packet_received.trigger(packet=packet)
+                        on_tcp_packet_received.trigger(client = self,packet=packet)
                 except (EOFError, ConnectionResetError):
                     break
-       
+                
+    def handle_udp_packet(self,packet):
+        self.udp_queue((packet,))
+            
+        
+    
+    @on_tcp_packet_received.register(packet_type=TCPPayloadType.DISCONNECT)
     def handle_disconcert_package(self,package:TCPPacket)->None:
         self.disconnect(reason="user-disconcert",msg="Thx for Playing :D")
     
@@ -116,7 +126,7 @@ class Client:
             reason (_type_, optional): _description_. Defaults to None.
         """
         
-        packet = TCPPacket(type=PayloadType.DISCONNECT,data={"reason":reason,"msg":msg,**kwargs})
+        packet = TCPPacket(type=TCPPayloadType.DISCONNECT,data={"reason":reason,"msg":msg,**kwargs})
         self.send(packet)
         self.tcp_sock.close()
         self.connected = False
@@ -126,7 +136,7 @@ class Client:
 
     def error_disconnect(self,exception:Exception,connection_error:False):
         if not connection_error:
-            packet = TCPPacket(type=PayloadType.DISCONNECT,data={"reason":type(exception),"args":exception.args})
+            packet = TCPPacket(type=TCPPayloadType.DISCONNECT,data={"reason":type(exception),"args":exception.args})
             self.send(packet=packet)
         self.tcp_sock.close()
         self.connected = False

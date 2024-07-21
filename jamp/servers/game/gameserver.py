@@ -124,7 +124,7 @@ class GameServer:
 
     def start_udp_server(self):
         self.udp_server: UDPServer = self.custom_udp_server(
-            host=self.host_name, port=self.tcp_port, game_server=GameServer
+            host=self.host_name, port=self.udp_port, game_server=GameServer
         )
         threading.Thread(target=self.udp_server.run).start()
 
@@ -137,7 +137,7 @@ class GameServer:
         if self.registration_server:
             self._register_server()
         self.start_tcp_server()
-        # self.start_udp_server()
+        self.start_udp_server()
 
     def on_ready(self) -> None: ...
     def on_shutdown(self) -> None: ...

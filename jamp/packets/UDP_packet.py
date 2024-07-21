@@ -1,13 +1,13 @@
 import pickle
 from dataclasses import dataclass
 
-from ..enums.tcp_enums import TCPPayloadType
-from ..utils.static_settings import TCP_HEADER_SIZE
+from ..enums.udp_enum import UDPPayloadType
+from ..utils.static_settings import *
 
 
 @dataclass
-class TCPPacket:
-    type: TCPPayloadType
+class UDPPacket:
+    type: UDPPayloadType
     data: dict
 
     def dump(self):
@@ -19,5 +19,5 @@ class TCPPacket:
         return f"{len(payload):<{TCP_HEADER_SIZE}}".encode() + payload
 
     @staticmethod
-    def load(payload) -> "TCPPacket":
+    def load(payload) -> "UDPPacket":
         return pickle.loads(payload)

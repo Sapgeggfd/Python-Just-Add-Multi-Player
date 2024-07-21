@@ -12,3 +12,7 @@ PLAYER_AUTH: bool = False
 # Static TCP Server Settings
 TCP_HEADER_SIZE: int = 16
 TCP_CONNECT_TIMEOUT: int = 5
+
+
+# Static UDP Server Settings
+UDP_PACKET_SIZE: int = 2048

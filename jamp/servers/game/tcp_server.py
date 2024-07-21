@@ -3,10 +3,8 @@ import socket
 import threading
 from typing import Protocol
 
-from ...enums.tcp_server_enums import PayloadType
 from ...packets.tcp_packet import TCPPacket
 from ...utils.custom_logger import TCPServerLogger
-from ...utils.static_settings import TCP_HEADER_SIZE
 from .client import Client
 
 
@@ -56,7 +54,7 @@ class TCPServer:
         new_client: Client = self.custom_client(address=addr, tcp_sock=client_sock, tcp_server=self)
         if new_client._wait_for_connect():
             if self.game_server.add_client(new_client):
-                threading.Thread(target=Client._handle_connection).start()
+                threading.Thread(target=Client._handle_tcp_connection).start()
                 return
         del new_client
 
@@ -68,3 +66,7 @@ class TCPServer:
                     dc_clients.append(client)
             for client in dc_clients:
                 self.game_server.remove_client(client)
+
+    def broadcast(self, packet: TCPPacket):
+        for client in self.game_server.clients:
+            client.send(packet)
