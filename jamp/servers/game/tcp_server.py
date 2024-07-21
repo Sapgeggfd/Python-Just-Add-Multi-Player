@@ -1,6 +1,6 @@
 import socket
 
-from ...events.events import (
+from ...events import (
     on_tcp_client_disconnect,
     on_tcp_packet_received,
     on_tcp_server_connect,

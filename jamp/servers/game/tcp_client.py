@@ -2,7 +2,7 @@ import socket
 import threading
 
 from ...enums.tcp_enums import TCPPayloadType
-from ...events.events import (
+from ...events import (
     on_tcp_client_created,
     on_tcp_client_disconnect,
     on_tcp_client_error,
