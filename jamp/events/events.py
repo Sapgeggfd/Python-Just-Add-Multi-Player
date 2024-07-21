@@ -1,3 +1,4 @@
+import socket
 import threading
 
 
@@ -63,14 +64,14 @@ class OnTCPServerStop(Event): ...
 
 
 class OnTCPServerError(Event):
-    def trigger(self, exception: Exception):
-        self._call_listeners(exception)
+    def trigger(self, sock: socket.socket, exception: Exception):
+        self._call_listeners(sock, exception)
 
 
 on_tcp_server_start = OnTCPServerStart()
-on_tcp_connect = OnTCPConnect()
+on_tcp_server_connect = OnTCPConnect()
 on_tcp_packet_received = OnTCPPacketReceived()
-on_tcp_disconnect = OnTCPDisconnect()
+on_tcp_server_disconnect = OnTCPDisconnect()
 on_tcp_server_stop = OnTCPServerStop()
 on_tcp_server_error = OnTCPServerError()
 
@@ -121,8 +122,8 @@ class OnTCPClientDisconnect(Event):
 
 
 class OnTCPClientError(Event):
-    def trigger(self, exception: Exception):
-        self._call_listeners(exception)
+    def trigger(self, client, exception: Exception):
+        self._call_listeners(client, exception)
 
 
 on_tcp_client_created = OnTCPClientCreated()

@@ -1,6 +1,14 @@
 import socket
 
-from ...events.events import *
+from ...events.events import (
+    on_tcp_client_disconnect,
+    on_tcp_packet_received,
+    on_tcp_server_connect,
+    on_tcp_server_disconnect,
+    on_tcp_server_error,
+    on_tcp_server_start,
+    on_tcp_server_stop,
+)
 from ...packets.tcp_packet import TCPPacket
 from ...utils.static_settings import TCP_HEADER_SIZE
 from .tcp_client import TCPClient
@@ -35,9 +43,9 @@ class TCPServer:
             sock.listen()
             while self.running:
                 new_sock, _ = sock.accept()
-                on_tcp_connect.trigger(new_socket=new_sock)
+                on_tcp_server_connect.trigger(new_socket=new_sock)
 
-    @on_tcp_connect.register(threaded=True)
+    @on_tcp_server_connect.register(threaded=True)
     def _handle_packet(self, new_sock: socket.socket) -> None:
         """gets new packets that are received from the TCP Socket and triggers the event on_tcp_packet_received with the received packet as argument
 
@@ -55,15 +63,22 @@ class TCPServer:
                 except (EOFError, ConnectionResetError) as e:
                     on_tcp_server_error.trigger(exception=e)
 
-    @on_tcp_connect.register()
+    @on_tcp_server_connect.register()
     def _generate_new_client(self, new_sock: socket.socket) -> None:
         """Generate a new TCPClient"""
         new_client = TCPClient(sock=new_sock)
-        # No trigger because its gets trigger in the init of the TCPClient
+        # No trigger because it gets trigger in the init of the TCPClient
+
+    @on_tcp_server_error.register
+    def _tcp_server_error_handler(self, sock: socket.socket, exception: Exception) -> None:
+        """closes the TCP Connection on error"""
+        sock.close()
+        print(exception)
+        on_tcp_server_disconnect.trigger(remote_socket=sock)
 
     @on_tcp_client_disconnect.register()
     def disconnect_client(self, client: TCPClient) -> None:
         """Disconnects a tcp_socket and triggers the on_tcp_disconnect.trigger with the remote socket as argument"""
         client_sock = client.tcp_sock
         client_sock.close()
-        on_tcp_disconnect.trigger(remote_socket=client_sock)
+        on_tcp_server_disconnect.trigger(remote_socket=client_sock)

@@ -38,3 +38,10 @@ class TCPClient:
         """Disconnects this TCPClient from the Server"""
         if packet.type == TCPPayloadType.DISCONNECT:
             on_tcp_client_disconnect.trigger(client=self)
+
+    @on_tcp_client_error.register()
+    def _handle_client_error(self, _client, exception) -> None:
+        """disconnects the tcp socket on error"""
+        self.tcp_sock.close()
+        print(exception)
+        on_tcp_client_disconnect.trigger(client=self)
