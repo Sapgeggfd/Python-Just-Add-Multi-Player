@@ -1,5 +1,4 @@
 import socket
-import threading
 from logging import Logger
 from queue import PriorityQueue
 from uuid import uuid4
@@ -88,7 +87,7 @@ class Client:
         except requests.RequestException as e:
             raise AuthServerError(e)
         
-    def _handle_tcp_connection(self):
+    def _handle_tcp_packets(self):
         with self.tcp_sock as client_sock:
             while self.connected:
                 try:
@@ -96,7 +95,6 @@ class Client:
                     if payload_size.isdecimal():
                         payload = client_sock.recv(int(payload_size))
                         packet = TCPPacket.load(payload)
-                        self.logger.debug(f"added package to queue: {packet}")
                         on_tcp_packet_received.trigger(client = self,packet=packet)
                 except (EOFError, ConnectionResetError):
                     break
