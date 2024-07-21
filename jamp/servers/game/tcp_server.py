@@ -54,7 +54,7 @@ class TCPServer:
         new_client: Client = self.custom_client(address=addr, tcp_sock=client_sock, tcp_server=self)
         if new_client._wait_for_connect():
             if self.game_server.add_client(new_client):
-                threading.Thread(target=Client._handle_tcp_connection).start()
+                threading.Thread(target=Client._handle_tcp_packets).start()
                 return
         del new_client
 
