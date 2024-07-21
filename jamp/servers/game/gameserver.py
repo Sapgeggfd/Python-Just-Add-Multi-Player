@@ -7,7 +7,6 @@ import requests
 
 from ...utils.custom_logger import GameServerLogger
 from ...utils.static_settings import CERTIFICATE, SERVER_REGISTRATION_SERVER_URL
-from .client import Client
 from .tcp_server import TCPServer
 from .udp_server import UDPServer
 
@@ -74,10 +73,10 @@ class GameServer:
         self.udp_server = None
 
     @property
-    def clients(self) -> list[Client]:
+    def clients(self) -> list:
         return self._clients
 
-    def add_client(self, client: Client):
+    def add_client(self, client):
         if any(client.user_uuid == user_uuid for user_uuid in self.clients):
             client.disconnect(reason="User with this UUID is already on the Server")  # TODO Better Error handling
             return False
@@ -85,7 +84,7 @@ class GameServer:
             self._clients.append(client)
             return True
 
-    def remove_client(self, client: Client):
+    def remove_client(self, client):
         try:
             self._clients.remove(client)
         except ValueError:
