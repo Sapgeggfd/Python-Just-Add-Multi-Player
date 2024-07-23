@@ -51,9 +51,7 @@ class Client:
 
     def connect_client(self, _=None, packet: TCPPacket = None):
         """First TCP data to set the client uuid"""
-        print(packet.type)
         if packet.type == TCPPayloadType.CONNECT:
-            print(packet.data.get("client_uuid").hex)
             self.client_uuid = packet.data.get("client_uuid")
             on_client_connected.trigger(client=self)
 
