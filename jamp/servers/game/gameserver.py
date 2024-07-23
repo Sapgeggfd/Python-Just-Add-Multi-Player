@@ -23,6 +23,10 @@ class GameServer:
         self.__clients: list = []
         self.max_clients: int = 20
 
+    def _register_funcs(self):
+        on_udp_packet_received.register(self._dispatch_udp_packet, threaded=True)
+        on_client_created.register(self.add_client)
+
     @property
     def clients(self) -> list:
         return self.__clients
@@ -33,14 +37,12 @@ class GameServer:
     def _start_udp_server(self) -> None:
         self.udp_server.start()
 
-    @on_udp_packet_received.register(threaded=True)
     def _dispatch_udp_packet(self, packet, remote_addr):
         for client in self.__clients:
             if client.remote_addr == remote_addr:
                 client.udp_queue.add(packet)
 
-    @on_tcp_client_created.register()
-    def add_client(self, new_client):
+    def add_client(self, new_client=None):
         if new_client not in self.__clients:
             self.__clients.append(new_client)
 
