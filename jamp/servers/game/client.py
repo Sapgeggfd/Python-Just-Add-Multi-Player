@@ -19,7 +19,6 @@ class Client:
     """The TCP Client handles Packets which send offer its tcp_socket"""
 
     def __init__(self, sock: socket.socket) -> None:
-        print("New Client")
         self.client_uuid: uuid.uuid4 = None
         self.running = True
 
