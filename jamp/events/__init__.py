@@ -6,7 +6,7 @@ from .udp_events import *
 
 # TCP Events
 on_tcp_server_start = OnTCPServerStart()
-on_tcp_server_connect = OnTCPConnect()
+on_tcp_server_connect = OnTCPServerConnect()
 on_tcp_packet_received = OnTCPPacketReceived()
 on_tcp_server_disconnect = OnTCPDisconnect()
 on_tcp_server_stop = OnTCPServerStop()
@@ -19,10 +19,11 @@ on_udp_server_stop = OnUDPServerStop()
 
 
 # TCP Client
-on_tcp_client_created = OnTCPClientCreated()
-on_tcp_client_packet_received = OnTCPClientPacketReceived()
-on_tcp_client_disconnect = OnTCPClientDisconnect()
-on_tcp_client_error = OnTCPClientError()
+on_client_created = OnClientCreated()
+on_client_connected = OnClientConnect()
+on_client_tcp_packet_received = OnClientTCPPacketReceived()
+on_client_disconnect = OnClientDisconnect()
+on_client_error = OnClientError()
 
 # GameServer
 on_gameserver_start = OnGameServerStart()

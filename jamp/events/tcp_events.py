@@ -3,10 +3,16 @@ import socket
 from ._base_event import Event
 
 
-class OnTCPServerStart(Event): ...
+class OnTCPServerStart(Event):
+    def register(self, func=None, *, threaded: bool = False, daemon_thread: bool = False):
+        """triggers if the tcp server starts"""
+        return super().register(func)
+
+    def trigger(self) -> None:
+        self._call_listeners()
 
 
-class OnTCPConnect(Event):
+class OnTCPServerConnect(Event):
     def register(self, func=None, *, threaded: bool = False, daemon_thread: bool = False):
         """on trigger it parses the new socket of type socket.socket as argument"""
         return super().register(func)
