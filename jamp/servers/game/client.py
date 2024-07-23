@@ -1,3 +1,4 @@
+import queue
 import socket
 import threading
 
@@ -12,11 +13,15 @@ from ...packets.tcp_packet import TCPPacket
 from ...utils.static_settings import TCP_HEADER_SIZE
 
 
-class TCPClient:
+class Client:
     """The TCP Client handles Packets which send offer its tcp_socket"""
 
     def __init__(self, sock: socket.socket) -> None:
         self.tcp_sock: socket.socket = sock
+        self.remote_addr = self.tcp_sock.getpeername()
+
+        self.udp_queue = queue.Queue()
+
         threading.Thread(target=self._handle_packets).start()
         on_tcp_client_created.trigger(client=self)
 
