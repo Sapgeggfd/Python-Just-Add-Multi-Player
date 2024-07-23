@@ -11,7 +11,7 @@ from ...events import (
 )
 from ...packets.tcp_packet import TCPPacket
 from ...utils.static_settings import TCP_HEADER_SIZE
-from .tcp_client import TCPClient
+from .client import Client
 
 
 class TCPServer:
@@ -66,7 +66,7 @@ class TCPServer:
     @on_tcp_server_connect.register()
     def _generate_new_client(self, new_sock: socket.socket) -> None:
         """Generate a new TCPClient"""
-        new_client = TCPClient(sock=new_sock)
+        new_client = Client(sock=new_sock)
         # No trigger because it gets trigger in the init of the TCPClient
 
     @on_tcp_server_error.register
@@ -77,7 +77,7 @@ class TCPServer:
         on_tcp_server_disconnect.trigger(remote_socket=sock)
 
     @on_tcp_client_disconnect.register()
-    def disconnect_client(self, client: TCPClient) -> None:
+    def disconnect_client(self, client: Client) -> None:
         """Disconnects a tcp_socket and triggers the on_tcp_disconnect.trigger with the remote socket as argument"""
         client_sock = client.tcp_sock
         client_sock.close()
