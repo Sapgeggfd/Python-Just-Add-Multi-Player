@@ -13,8 +13,7 @@ class TCPPacket:
     def dump(self):
         payload = pickle.dumps(self)
 
-        print(f"{len(payload):<{TCP_HEADER_SIZE}}\nPayload{payload}")
-        print()
+        print(f"{len(payload):<{TCP_HEADER_SIZE}}".encode() + payload)
 
         return f"{len(payload):<{TCP_HEADER_SIZE}}".encode() + payload
 
