@@ -2,6 +2,7 @@ import pickle
 from dataclasses import dataclass
 
 from ..enums.udp_enum import UDPPayloadType
+from ..exceptions.udp_exception import UDPPacketSizeException
 from ..utils.static_settings import *
 
 
@@ -12,11 +13,9 @@ class UDPPacket:
 
     def dump(self):
         payload = pickle.dumps(self)
-
-        print(f"{len(payload):<{TCP_HEADER_SIZE}}\nPayload{payload}")
-        print()
-
-        return f"{len(payload):<{TCP_HEADER_SIZE}}".encode() + payload
+        if len(payload) <= UDP_PACKET_SIZE:
+            return payload
+        raise UDPPacketSizeException
 
     @staticmethod
     def load(payload) -> "UDPPacket":
