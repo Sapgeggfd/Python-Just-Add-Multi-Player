@@ -19,7 +19,7 @@ class UDPServer:
 
         self.udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    def run(self):
+    def start(self) -> None:
 
         with self.udp_sock as sock:
             sock.bind((self.host, self.port))
@@ -28,3 +28,5 @@ class UDPServer:
 
             except Exception as e:
                 print(e)
+
+    def stop(self): ...
