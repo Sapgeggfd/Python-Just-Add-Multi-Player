@@ -1,4 +1,5 @@
 from ._base_event import Event
+from .gameserver_events import *
 from .tcp_client_events import *
 from .tcp_events import *
 from .udp_events import *
@@ -22,3 +23,6 @@ on_tcp_client_created = OnTCPClientCreated()
 on_tcp_client_packet_received = OnTCPClientPacketReceived()
 on_tcp_client_disconnect = OnTCPClientDisconnect()
 on_tcp_client_error = OnTCPClientError()
+
+# GameServer
+on_gameserver_start = OnGameServerStart()
