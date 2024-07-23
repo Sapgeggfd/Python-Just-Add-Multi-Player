@@ -1,3 +1,5 @@
+import threading
+
 from ._listener import Listener
 
 
@@ -11,7 +13,8 @@ class Event:
         new_listener = Listener(func=func, threaded=threaded, daemon_thread=daemon_thread)
         self._register_listener(new_listener)
 
-    def trigger(self, *args, **kwargs) -> None: ...
+    def trigger(self, *args, **kwargs) -> None:
+        self._call_listeners(*args, **kwargs)
 
     def _register_listener(self, listener: Listener):
         if listener not in self.__listeners:
