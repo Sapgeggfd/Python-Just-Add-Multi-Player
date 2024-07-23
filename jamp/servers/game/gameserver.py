@@ -1,5 +1,7 @@
 import uuid
 
+from ...enums.tcp_enums import TCPPayloadType
+from ...enums.udp_enum import UDPPayloadType
 from ...events import *
 from .tcp_server import TCPServer
 from .udp_server import UDPServer
@@ -23,9 +25,14 @@ class GameServer:
         self.__clients: list = []
         self.max_clients: int = 20
 
+        self._register_funcs()
+
     def _register_funcs(self):
         on_udp_packet_received.register(self._dispatch_udp_packet, threaded=True)
         on_client_created.register(self.add_client)
+        on_client_tcp_packet_received.register(self._handle_tcp_broadcast)
+        on_client_udp_packet_received.register(self._handle_udp_broadcast)
+        on_client_disconnect.register(self.remove_client)
 
     @property
     def clients(self) -> list:
@@ -40,11 +47,33 @@ class GameServer:
     def _dispatch_udp_packet(self, packet, remote_addr):
         for client in self.__clients:
             if client.remote_addr == remote_addr:
-                client.udp_queue.add(packet)
+                client.add_udp_queue(packet)
 
     def add_client(self, new_client=None):
         if new_client not in self.__clients:
+            self.udp_port += 1
+            new_client.udp_sock = self.udp_server.udp_sock
+            new_client.send_tcp(TCPPayloadType.CONNECT, payload={"udp_port": self.udp_port})
             self.__clients.append(new_client)
+
+    def remove_client(self, client):
+        if client in self.__clients:
+            print("removed client")
+            self.__clients.remove(client)
+
+    def _handle_tcp_broadcast(self, client, packet):
+        if packet.type == TCPPayloadType.BROADCAST:
+            for cl in self.__clients:
+                # cl.send_tcp(packet.type, packet.data)
+                if cl != client:
+                    cl.send_tcp(packet.type, packet.data)
+
+    def _handle_udp_broadcast(self, client, packet):
+        if packet.type == UDPPayloadType.BROADCAST:
+            for cl in self.__clients:
+                # cl.send_udp(packet.type, packet.data)
+                if cl != client:
+                    cl.send_udp(packet.type, packet.data)
 
     def start(self):
         self.running = True

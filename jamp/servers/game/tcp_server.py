@@ -71,7 +71,7 @@ class TCPServer:
 
     def _generate_new_client(self, new_sock: socket.socket) -> None:
         """Generate a new TCPClient"""
-        new_client = Client(sock=new_sock)
+        new_client = Client(tcp_sock=new_sock)
         # print(new_client)
         # No trigger because it gets trigger in the init of the TCPClient
 

@@ -15,4 +15,4 @@ TCP_CONNECT_TIMEOUT: int = 5
 
 
 # Static UDP Server Settings
-UDP_PACKET_SIZE: int = 2048
+UDP_PACKET_SIZE: int = 1024
