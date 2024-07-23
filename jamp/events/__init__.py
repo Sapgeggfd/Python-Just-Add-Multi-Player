@@ -26,3 +26,4 @@ on_tcp_client_error = OnTCPClientError()
 
 # GameServer
 on_gameserver_start = OnGameServerStart()
+on_gameserver_stop = OnGameServerStop()
